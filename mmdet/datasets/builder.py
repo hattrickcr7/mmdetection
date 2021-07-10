@@ -30,6 +30,7 @@ def _concat_dataset(cfg, default_args=None):
     seg_prefixes = cfg.get('seg_prefix', None)
     proposal_files = cfg.get('proposal_file', None)
     separate_eval = cfg.get('separate_eval', True)
+    label_types = cfg['label_type']
 
     datasets = []
     num_dset = len(ann_files)
@@ -39,6 +40,7 @@ def _concat_dataset(cfg, default_args=None):
         if 'separate_eval' in data_cfg:
             data_cfg.pop('separate_eval')
         data_cfg['ann_file'] = ann_files[i]
+        data_cfg['label_type'] = label_types[i]
         if isinstance(img_prefixes, (list, tuple)):
             data_cfg['img_prefix'] = img_prefixes[i]
         if isinstance(seg_prefixes, (list, tuple)):

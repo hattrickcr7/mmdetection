@@ -257,7 +257,14 @@ class LoadAnnotations:
             dict: The dict contains loaded label annotations.
         """
 
+        label_type2int = {'bbox': 0, 'tag': 1, 'unlabel': 2}
+
         results['gt_labels'] = results['ann_info']['labels'].copy()
+        if 'tags' in results['ann_info'].keys():
+            results['tags'] = results['ann_info']['tags'].copy()
+        if results['img_info']['label_type'] == 'tag':
+            results['label_type'] = label_type2int[results['img_info']['label_type']]
+        # results['label_type'] = ''.join(results['img_info']['label_type'])
         return results
 
     def _poly2mask(self, mask_ann, img_h, img_w):

@@ -56,6 +56,7 @@ class CustomDataset(Dataset):
     def __init__(self,
                  ann_file,
                  pipeline,
+                 label_type='bbox',
                  classes=None,
                  data_root=None,
                  img_prefix='',
@@ -71,6 +72,7 @@ class CustomDataset(Dataset):
         self.test_mode = test_mode
         self.filter_empty_gt = filter_empty_gt
         self.CLASSES = self.get_classes(classes)
+        self.label_type = label_type
 
         # join paths if data_root is specified
         if self.data_root is not None:
@@ -228,7 +230,8 @@ class CustomDataset(Dataset):
         """
 
         img_info = self.data_infos[idx]
-        results = dict(img_info=img_info)
+        ann_info = self.get_ann_info(idx)
+        results = dict(img_info=img_info, ann_info=ann_info)
         if self.proposals is not None:
             results['proposals'] = self.proposals[idx]
         self.pre_pipeline(results)
