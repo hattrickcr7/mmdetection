@@ -20,7 +20,6 @@ test_pipeline = [
         img_scale=(1000, 600),
         flip=False,
         transforms=[
-            dict(type='LoadImageFromFile'),
             dict(type='LoadAnnotations', with_bbox=True),
             dict(type='Resize', keep_ratio=True),
             dict(type='RandomFlip'),
@@ -31,16 +30,17 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=1,
-    workers_per_gpu=1,
+    samples_per_gpu=16,
+    workers_per_gpu=8,
     train=dict(
         type=dataset_type,
         ann_file=[
-            # data_root + 'VOC2007/ImageSets/Main/trainval.txt',
+            data_root + 'VOC2007/ImageSets/Main/trainval.txt',
             data_root + 'VOC2007/ImageSets/Main/test.txt',
+            data_root + 'VOC2012/ImageSets/Main/trainval.txt',
         ],
-        img_prefix=[data_root + 'VOC2007/', data_root + 'VOC2007/'],
-        label_type=['tag', 'unlabel'],
+        img_prefix=[data_root + 'VOC2007/', data_root + 'VOC2007/', data_root + 'VOC2012/'],
+        label_type=['bbox', 'bbox', 'tag'],
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,

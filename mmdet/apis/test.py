@@ -103,7 +103,7 @@ def single_gpu_test(model,
                     xmax.appendChild(xmaxnum)
                     ymax.appendChild(ymaxnum)
                     score.appendChild(scorenum)
-            f = open(os.path.join('data\\VOCdevkit', os.path.join(d.data[0][0]['filename'].split('/')[2], os.path.join('Annotations', d.data[0][0]['ori_filename'].split('/')[1].split('.')[0]+'.xml'))), "w")
+            f = open(os.path.join('data\\VOCdevkit', os.path.join(d.data[0][0]['filename'].split('/')[2], os.path.join('pseudo_label', d.data[0][0]['ori_filename'].split('/')[1].split('.')[0]+'.xml'))), "w")
             f.write(doc.toprettyxml(indent="  "))
             f.close()
 

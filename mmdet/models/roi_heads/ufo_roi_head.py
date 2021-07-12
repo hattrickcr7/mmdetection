@@ -1,3 +1,4 @@
+import numpy
 import torch
 
 from mmdet.core import bbox2result, bbox2roi, build_assigner, build_sampler
@@ -24,6 +25,11 @@ class UFORoIHead(BaseRoIHead, VOCBBoxTestMixin, MaskTestMixin):
         """Initialize ``bbox_head``"""
         self.bbox_roi_extractor = build_roi_extractor(bbox_roi_extractor)
         self.bbox_head = build_head(bbox_head)
+        # self.bbox_heads = {}
+        # for k in bbox_head.keys():
+        #     bbox_head[k]['in_channels'] = self.shared_head.shared_out_channels
+        #     self.bbox_heads[k] = build_head(bbox_head[k])
+        #     self.bbox_head = self.bbox_heads[k]
 
     def init_mask_head(self, mask_roi_extractor, mask_head):
         """Initialize ``mask_head``"""
@@ -83,7 +89,8 @@ class UFORoIHead(BaseRoIHead, VOCBBoxTestMixin, MaskTestMixin):
         """
         # assign gts and sample proposals
         int2label_type = ['bbox', 'tag', 'unlabel']
-        label_type = int2label_type[label_type]
+        label_type = int2label_type[label_type[0]]
+        numpy.bincount(())
 
         if self.with_bbox or self.with_mask:
             num_imgs = len(img_metas)
@@ -138,20 +145,17 @@ class UFORoIHead(BaseRoIHead, VOCBBoxTestMixin, MaskTestMixin):
                             img_metas, label_type):
         """Run forward function and calculate loss for box head in training."""
         rois = bbox2roi([res.bboxes for res in sampling_results])
+        # label_type2head_type = {'bbox': 'labeled_head', 'tag': 'weak_head', 'unlabel': 'unlabeled_head'}
+        # #每个batch都是一样的标签类型
+        # self.bbox_head = self.bbox_heads[label_type2head_type[label_type]]
         bbox_results = self._bbox_forward(x, rois)
-
         bbox_targets = self.bbox_head.get_targets(sampling_results, gt_bboxes,
                                                   gt_labels, self.train_cfg)
-        loss_bbox = self.bbox_head.loss(bbox_results['cls_score'],
-                                        bbox_results['det_score'],
-                                        bbox_results['ref_logits'],
-                                        bbox_results['ref_bbox_preds'],
+        loss_bbox = self.bbox_head.loss(bbox_results,
                                         gt_bboxes,
                                         gt_labels,
-                                        label_type,
                                         sampling_results,
                                         *bbox_targets)
-
         bbox_results.update(loss_bbox=loss_bbox)
         return bbox_results
 

@@ -169,10 +169,13 @@ class CustomDataset(Dataset):
         otherwise group 0.
         """
         self.flag = np.zeros(len(self), dtype=np.uint8)
+        lable_type2int = {'bbox': 0, 'tag': 1, 'unlabel': 2}
         for i in range(len(self)):
             img_info = self.data_infos[i]
             if img_info['width'] / img_info['height'] > 1:
-                self.flag[i] = 1
+                self.flag[i] = 2 * lable_type2int[img_info['label_type']] + 1
+            else:
+                self.flag[i] = 2 * lable_type2int[img_info['label_type']]
 
     def _rand_another(self, idx):
         """Get another random index from the same group as the given index."""

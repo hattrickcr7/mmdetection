@@ -11,7 +11,7 @@ import torch
 
 
 @HEADS.register_module()
-class UFOHead(BBoxHead):
+class UFOWeakHead(BBoxHead):
     r"""More general bbox head, with shared conv and fc layers and two optional
     separated branches.
 
@@ -23,38 +23,30 @@ class UFOHead(BBoxHead):
     """  # noqa: W605
 
     def __init__(self,
-                 num_shared_convs=0,
-                 num_shared_fcs=2,
                  num_cls_convs=0,
                  num_cls_fcs=0,
                  num_reg_convs=0,
                  num_reg_fcs=0,
                  conv_out_channels=256,
                  fc_out_channels=1024,
+                 in_channels=256,
                  with_ref=True,
                  with_bbox_pred=True,
                  conv_cfg=None,
                  norm_cfg=None,
                  init_cfg=None,
-                 oicr_p=0,
                  loss_img=dict(
                      type='CrossEntropyLoss',
                      use_sigmoid=True,
                      loss_weight=1.0),
                  *args,
                  **kwargs):
-        super(UFOHead, self).__init__(
+        super(UFOWeakHead, self).__init__(
             *args, init_cfg=init_cfg, **kwargs)
-        assert (num_shared_convs + num_shared_fcs + num_cls_convs +
-                num_cls_fcs + num_reg_convs + num_reg_fcs > 0)
-        if num_cls_convs > 0 or num_reg_convs > 0:
-            assert num_shared_fcs == 0
         if not self.with_cls:
             assert num_cls_convs == 0 and num_cls_fcs == 0
         if not self.with_reg:
             assert num_reg_convs == 0 and num_reg_fcs == 0
-        self.num_shared_convs = num_shared_convs
-        self.num_shared_fcs = num_shared_fcs
         self.num_cls_convs = num_cls_convs
         self.num_cls_fcs = num_cls_fcs
         self.num_reg_convs = num_reg_convs
@@ -64,32 +56,19 @@ class UFOHead(BBoxHead):
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
         self.with_ref = with_ref
-        self.oicr_p = oicr_p
         self.with_bbox_pred = with_bbox_pred
         self.loss_img = build_loss(loss_img)
-
-        # add shared convs and fcs
-        self.shared_convs, self.shared_fcs, last_layer_dim = \
-            self._add_conv_fc_branch(
-                self.num_shared_convs, self.num_shared_fcs, self.in_channels,
-                True)
-        self.shared_out_channels = last_layer_dim
+        self.in_channels = in_channels
 
         # add cls specific branch
         self.cls_convs, self.cls_fcs, self.cls_last_dim = \
             self._add_conv_fc_branch(
-                self.num_cls_convs, self.num_cls_fcs, self.shared_out_channels)
+                self.num_cls_convs, self.num_cls_fcs, self.in_channels)
 
         # add reg specific branch
         self.reg_convs, self.reg_fcs, self.reg_last_dim = \
             self._add_conv_fc_branch(
-                self.num_reg_convs, self.num_reg_fcs, self.shared_out_channels)
-
-        if self.num_shared_fcs == 0 and not self.with_avg_pool:
-            if self.num_cls_fcs == 0:
-                self.cls_last_dim *= self.roi_feat_area
-            if self.num_reg_fcs == 0:
-                self.reg_last_dim *= self.roi_feat_area
+                self.num_reg_convs, self.num_reg_fcs, self.in_channels)
 
         self.relu = nn.ReLU(inplace=True)
         # reconstruct fc_cls and fc_reg since input channels are changed
@@ -180,11 +159,6 @@ class UFOHead(BBoxHead):
         # add branch specific fc layers
         branch_fcs = nn.ModuleList()
         if num_branch_fcs > 0:
-            # for shared branch, only consider self.with_avg_pool
-            # for separated branches, also consider self.num_shared_fcs
-            if (is_shared
-                or self.num_shared_fcs == 0) and not self.with_avg_pool:
-                last_layer_dim *= self.roi_feat_area
             for i in range(num_branch_fcs):
                 fc_in_channels = (
                     last_layer_dim if i == 0 else self.fc_out_channels)
@@ -194,19 +168,6 @@ class UFOHead(BBoxHead):
         return branch_convs, branch_fcs, last_layer_dim
 
     def forward(self, x):
-        # shared part
-        if self.num_shared_convs > 0:
-            for conv in self.shared_convs:
-                x = conv(x)
-
-        if self.num_shared_fcs > 0:
-            if self.with_avg_pool:
-                x = self.avg_pool(x)
-
-            x = x.flatten(1)
-
-            for fc in self.shared_fcs:
-                x = self.relu(fc(x))
         # separate branches
         x_cls = x
         x_reg = x
@@ -248,13 +209,9 @@ class UFOHead(BBoxHead):
 
     @force_fp32(apply_to=('cls_score', 'det_score', 'ref_logits', 'ref_bbox_preds'))
     def loss(self,
-             cls_score,
-             det_score,
-             ref_logits,
-             ref_bbox_preds,
+             bbox_results,
              gt_bboxes,
              gt_labels,
-             label_type,
              rois,
              labels,
              label_weights,
@@ -263,6 +220,11 @@ class UFOHead(BBoxHead):
              reduction_override=None,
              epsilon=1e-10):
         losses = dict()
+        assert bbox_results is not None
+        cls_score = bbox_results['cls_score']
+        det_score = bbox_results['det_score']
+        ref_logits = bbox_results['ref_logits']
+        ref_bbox_preds = bbox_results['ref_bbox_preds']
         cls_score = F.softmax(cls_score, dim=1)
 
         det_score_list = det_score.split([p.bboxes.shape[0] for p in rois])

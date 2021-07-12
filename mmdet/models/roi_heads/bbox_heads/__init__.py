@@ -1,5 +1,6 @@
 from .bbox_head import BBoxHead
-from .ufo_head import UFOHead
+from .ufo_weak_head import UFOHead
+from .ufo_labeled_head import UFOLabeledHead
 from .convfc_bbox_head import (ConvFCBBoxHead, Shared2FCBBoxHead,
                                Shared4Conv1FCBBoxHead)
 from .dii_head import DIIHead
@@ -10,5 +11,5 @@ from .scnet_bbox_head import SCNetBBoxHead
 __all__ = [
     'BBoxHead', 'ConvFCBBoxHead', 'Shared2FCBBoxHead',
     'Shared4Conv1FCBBoxHead', 'DoubleConvFCBBoxHead', 'SABLHead', 'DIIHead',
-    'SCNetBBoxHead', "UFOHead"
+    'SCNetBBoxHead', 'UFOHead', 'UFOLabeledHead'
 ]

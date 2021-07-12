@@ -37,7 +37,8 @@ data = dict(
         dataset=dict(
             type=dataset_type,
             ann_file=[
-                data_root + 'VOC2012/ImageSets/Main/trainval.txt'
+                data_root + 'VOC2012/ImageSets/Main/trainval.txt',
+                data_root + 'VOC2012/ImageSets/Main/test.txt'
             ],
             img_prefix=[data_root + 'VOC2012/'],
             pipeline=train_pipeline)),
