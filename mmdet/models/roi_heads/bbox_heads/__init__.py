@@ -1,5 +1,5 @@
 from .bbox_head import BBoxHead
-from .ufo_weak_head import UFOHead
+from .ufo_head import UFOHead
 from .ufo_labeled_head import UFOLabeledHead
 from .convfc_bbox_head import (ConvFCBBoxHead, Shared2FCBBoxHead,
                                Shared4Conv1FCBBoxHead)

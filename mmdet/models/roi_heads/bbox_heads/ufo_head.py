@@ -249,8 +249,7 @@ class UFOHead(BBoxHead):
     @force_fp32(apply_to=('cls_score', 'det_score', 'ref_logits', 'ref_bbox_preds'))
     def loss(self,
              bbox_results,
-             gt_bboxes,
-             gt_labels,
+             tags,
              rois,
              labels,
              label_weights,
@@ -286,7 +285,7 @@ class UFOHead(BBoxHead):
         losses['loss_img'] = 0
         losses['loss_cls'] = 0
         losses['loss_bbox'] = 0
-        for idx, (final_score_per_im, targets_per_im, proposals_per_image, ref_logit, ref_bbox_pred) in enumerate(zip(final_score_list, gt_labels, rois, ref_img_logits, ref_img_bbox_preds)):
+        for idx, (final_score_per_im, targets_per_im, proposals_per_image, ref_logit, ref_bbox_pred) in enumerate(zip(final_score_list, tags, rois, ref_img_logits, ref_img_bbox_preds)):
             labels_per_im = generate_img_label(num_classes, targets_per_im, device)
             score_per_im = torch.clamp(torch.sum(final_score_per_im, dim=0), min=epsilon, max=1-epsilon)
             loss_img = self.loss_img(score_per_im, labels_per_im)

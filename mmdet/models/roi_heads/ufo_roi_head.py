@@ -66,7 +66,7 @@ class UFORoIHead(BaseRoIHead, VOCBBoxTestMixin, MaskTestMixin):
                       gt_bboxes_ignore=None,
                       gt_masks=None,
                       tags=[],
-                      label_type=0):
+                      label_type=[]):
         """
         Args:
             x (list[Tensor]): list of multi-level img features.
@@ -116,7 +116,8 @@ class UFORoIHead(BaseRoIHead, VOCBBoxTestMixin, MaskTestMixin):
         if self.with_bbox:
             bbox_results = self._bbox_forward_train(x, sampling_results,
                                                     gt_bboxes, gt_labels,
-                                                    img_metas, label_type)
+                                                    img_metas, label_type,
+                                                    tags)
             losses.update(bbox_results['loss_bbox'])
 
         # mask head forward and loss
@@ -142,7 +143,7 @@ class UFORoIHead(BaseRoIHead, VOCBBoxTestMixin, MaskTestMixin):
         return bbox_results
 
     def _bbox_forward_train(self, x, sampling_results, gt_bboxes, gt_labels,
-                            img_metas, label_type):
+                            img_metas, label_type, tags):
         """Run forward function and calculate loss for box head in training."""
         rois = bbox2roi([res.bboxes for res in sampling_results])
         # label_type2head_type = {'bbox': 'labeled_head', 'tag': 'weak_head', 'unlabel': 'unlabeled_head'}
@@ -152,8 +153,7 @@ class UFORoIHead(BaseRoIHead, VOCBBoxTestMixin, MaskTestMixin):
         bbox_targets = self.bbox_head.get_targets(sampling_results, gt_bboxes,
                                                   gt_labels, self.train_cfg)
         loss_bbox = self.bbox_head.loss(bbox_results,
-                                        gt_bboxes,
-                                        gt_labels,
+                                        tags,
                                         sampling_results,
                                         *bbox_targets)
         bbox_results.update(loss_bbox=loss_bbox)

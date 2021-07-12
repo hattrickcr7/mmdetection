@@ -97,9 +97,8 @@ class MYXMLDataset(CustomDataset):
         tags = []
         bboxes_ignore = []
         labels_ignore = []
-        if self.label_type == 'tag':
-            for tag in root.findall('tag'):
-                tags.append(self.cat2label[tag.text])
+        for tag in root.findall('tag'):
+            tags.append(self.cat2label[tag.text])
         for obj in root.findall('object'):
             name = obj.find('name').text
             if name not in self.CLASSES:
@@ -141,10 +140,13 @@ class MYXMLDataset(CustomDataset):
         else:
             bboxes_ignore = np.array(bboxes_ignore, ndmin=2) - 1
             labels_ignore = np.array(labels_ignore)
+        tags = np.array(tags)
+        if self.label_type == 'bbox':
+            tags = np.array(labels)
         ann = dict(
             bboxes=bboxes.astype(np.float32),
             labels=labels.astype(np.int64),
-            tags=tags,
+            tags=tags.astype(np.int64),
             bboxes_ignore=bboxes_ignore.astype(np.float32),
             labels_ignore=labels_ignore.astype(np.int64))
         return ann
