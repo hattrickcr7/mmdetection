@@ -8,7 +8,7 @@ from PIL import Image
 from .builder import DATASETS
 from .custom import CustomDataset
 
-
+@DATASETS.register_module()
 class MYXMLDataset(CustomDataset):
     """XML dataset for detection.
 

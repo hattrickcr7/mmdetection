@@ -12,6 +12,7 @@ train_pipeline = [
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'tags', 'label_type']),
+    # dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -36,11 +37,11 @@ data = dict(
         type=dataset_type,
         ann_file=[
             data_root + 'VOC2007/ImageSets/Main/trainval.txt',
-            data_root + 'VOC2007/ImageSets/Main/test.txt',
+            # data_root + 'VOC2007/ImageSets/Main/test.txt',
             data_root + 'VOC2012/ImageSets/Main/trainval.txt',
         ],
-        img_prefix=[data_root + 'VOC2007/', data_root + 'VOC2007/', data_root + 'VOC2012/'],
-        label_type=['bbox', 'bbox', 'tag'],
+        img_prefix=[data_root + 'VOC2007/',  data_root + 'VOC2012/'],
+        label_type=['bbox', 'tag'],
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,

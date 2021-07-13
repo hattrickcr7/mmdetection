@@ -40,7 +40,7 @@ class UFOHead(BBoxHead):
                  loss_img=dict(
                      type='CrossEntropyLoss',
                      use_sigmoid=True,
-                     loss_weight=1.0),
+                     loss_weight=0.0),
                  *args,
                  **kwargs):
         super(UFOHead, self).__init__(
@@ -285,11 +285,12 @@ class UFOHead(BBoxHead):
         losses['loss_img'] = 0
         losses['loss_cls'] = 0
         losses['loss_bbox'] = 0
-        for idx, (final_score_per_im, targets_per_im, proposals_per_image, ref_logit, ref_bbox_pred) in enumerate(zip(final_score_list, tags, rois, ref_img_logits, ref_img_bbox_preds)):
+        for idx, (final_score_per_im, targets_per_im) in enumerate(zip(final_score_list, tags)):
             labels_per_im = generate_img_label(num_classes, targets_per_im, device)
             score_per_im = torch.clamp(torch.sum(final_score_per_im, dim=0), min=epsilon, max=1-epsilon)
             loss_img = self.loss_img(score_per_im, labels_per_im)
             losses['loss_img'] += loss_img
+        losses['loss_img'] = losses['loss_img']/len(rois)
 
         if ref_logits is not None:
             avg_factor = max(torch.sum(label_weights > 0).float().item(), 1.)

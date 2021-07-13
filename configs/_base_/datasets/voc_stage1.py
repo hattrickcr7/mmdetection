@@ -36,24 +36,26 @@ data = dict(
             type=dataset_type,
             ann_file=[
                 data_root + 'VOC2007/ImageSets/Main/trainval.txt',
-                data_root + 'VOC2007/ImageSets/Main/test.txt'
+                # data_root + 'VOC2007/ImageSets/Main/test.txt'
             ],
             img_prefix=[data_root + 'VOC2007/', data_root + 'VOC2007/'],
             label_type=['bbox', 'bbox'],
             pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'VOC2007/ImageSets/Main/test.txt',
-        img_prefix=data_root + 'VOC2007/',
+        ann_file=[data_root + 'VOC2007/ImageSets/Main/test.txt'],
+        img_prefix=[data_root + 'VOC2007/'],
         label_type=['bbox', 'bbox'],
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
+        # ann_file=[data_root + 'VOC2007/ImageSets/Main/test.txt'],
+        # img_prefix=[data_root + 'VOC2007/'],
         ann_file=[
             data_root + 'VOC2012/ImageSets/Main/trainval.txt',
             # data_root + 'VOC2012/ImageSets/Main/test.txt',
         ],
-        label_type=['tag', 'tag'],
         img_prefix=[data_root + 'VOC2012/', data_root + 'VOC2012/'],
+        label_type=['tag', 'tag'],
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='mAP')
